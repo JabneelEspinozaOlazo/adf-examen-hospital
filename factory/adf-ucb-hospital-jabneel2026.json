@@ -1,0 +1,11 @@
+{
+	"name": "adf-ucb-hospital-jabneel2026",
+	"properties": {
+		"trustModeClaimForMi": {
+			"value": "Disabled",
+			"editable": true,
+			"isExplicitlySet": false
+		}
+	},
+	"location": "centralus"
+}
