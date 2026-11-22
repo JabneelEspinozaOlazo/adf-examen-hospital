@@ -1,0 +1,92 @@
+{
+	"name": "df_gold_dim_fecha",
+	"properties": {
+		"folder": {
+			"name": "Gold"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_silver_patients",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ds_gold_dim_fecha",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [],
+			"scriptLines": [
+				"source(output(",
+				"          fecha_key as integer,",
+				"          fecha_completa as date,",
+				"          anio as integer,",
+				"          trimestre as integer,",
+				"          trimestre_nombre as string,",
+				"          mes as integer,",
+				"          mes_nombre as string,",
+				"          mes_corto as string,",
+				"          semana_anio as integer,",
+				"          dia_mes as integer,",
+				"          dia_semana as integer,",
+				"          dia_nombre as string,",
+				"          es_fin_de_semana as boolean",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     query: 'SELECT CAST(CONVERT(varchar(8), d.fecha, 112) AS int) AS fecha_key,\\n       d.fecha AS fecha_completa,\\n       YEAR(d.fecha) AS anio,\\n       DATEPART(quarter, d.fecha) AS trimestre,\\n       \\'T\\' + CAST(DATEPART(quarter, d.fecha) AS varchar(1)) AS trimestre_nombre,\\n       MONTH(d.fecha) AS mes,\\n       CHOOSE(MONTH(d.fecha),\\'Enero\\',\\'Febrero\\',\\'Marzo\\',\\'Abril\\',\\'Mayo\\',\\'Junio\\',\\'Julio\\',\\'Agosto\\',\\'Septiembre\\',\\'Octubre\\',\\'Noviembre\\',\\'Diciembre\\') AS mes_nombre,\\n       CHOOSE(MONTH(d.fecha),\\'Ene\\',\\'Feb\\',\\'Mar\\',\\'Abr\\',\\'May\\',\\'Jun\\',\\'Jul\\',\\'Ago\\',\\'Sep\\',\\'Oct\\',\\'Nov\\',\\'Dic\\') AS mes_corto,\\n       DATEPART(iso_week, d.fecha) AS semana_anio,\\n       DAY(d.fecha) AS dia_mes,\\n       x.dow AS dia_semana,\\n       CHOOSE(x.dow,\\'Lunes\\',\\'Martes\\',\\'Miercoles\\',\\'Jueves\\',\\'Viernes\\',\\'Sabado\\',\\'Domingo\\') AS dia_nombre,\\n       CAST(CASE WHEN x.dow >= 6 THEN 1 ELSE 0 END AS bit) AS es_fin_de_semana\\nFROM (SELECT TOP 1461 DATEADD(day, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) - 1, CAST(\\'2023-01-01\\' AS date)) AS fecha\\n      FROM sys.all_objects a CROSS JOIN sys.all_objects b) d\\nCROSS APPLY (SELECT ((DATEDIFF(day, \\'2023-01-02\\', d.fecha) % 7) + 7) % 7 + 1 AS dow) x',",
+				"     format: 'query') ~> source1",
+				"source1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          fecha_key as integer,",
+				"          fecha_completa as date,",
+				"          anio as integer,",
+				"          trimestre as integer,",
+				"          trimestre_nombre as string,",
+				"          mes as integer,",
+				"          mes_nombre as string,",
+				"          mes_corto as string,",
+				"          semana_anio as integer,",
+				"          dia_mes as integer,",
+				"          dia_semana as integer,",
+				"          dia_nombre as string,",
+				"          es_fin_de_semana as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          fecha_key,",
+				"          fecha_completa,",
+				"          anio,",
+				"          trimestre,",
+				"          trimestre_nombre,",
+				"          mes,",
+				"          mes_nombre,",
+				"          mes_corto,",
+				"          semana_anio,",
+				"          dia_mes,",
+				"          dia_semana,",
+				"          dia_nombre,",
+				"          es_fin_de_semana",
+				"     )) ~> sink1"
+			]
+		}
+	}
+}
